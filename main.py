@@ -1,33 +1,33 @@
 import csv
 import logging
 import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 
 logger = logging.getLogger("uvicorn.error")
 logger.setLevel(logging.DEBUG)
+
+DATAFILE = os.getenv("DATAFILE", "data.csv")
 _data = []
 
 
-def lifespan(app):
+@asynccontextmanager
+async def lifespan(app):
     global _data
     logger.debug(f"DATAFILE: {DATAFILE}")
     if not os.path.exists(DATAFILE):
         logger.error(
             f"Error - can't find file indicated by env variable DATAFILE: {DATAFILE}"
         )
-        raise HTTPException(
-            status_code=500, detail=f"Internal error: data file is missing"
-        )
+        raise RuntimeError(f"Data file is missing: {DATAFILE}")
 
     with open(DATAFILE, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         _data = list(reader)
     yield
-    del _data
 
 
 app = FastAPI(lifespan=lifespan)
-DATAFILE = os.getenv("DATAFILE", "data.csv")
 
 
 def load_csv():
