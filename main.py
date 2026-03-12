@@ -10,6 +10,8 @@ DATAFILE = os.getenv("DATAFILE", "data.csv")
 
 
 def load_csv():
+    if hasattr(load_csv, "data"):
+        return load_csv.data
     logger.debug(f"DATAFILE: {DATAFILE}")
     if not os.path.exists(DATAFILE):
         logger.error(
@@ -21,7 +23,8 @@ def load_csv():
 
     with open(DATAFILE, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
-        return list(reader)
+        load_csv.data = list(reader)
+        return load_csv.data
 
 
 @app.get("/records")
